@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakePythonSetting">
+    <option name="pythonIntegrationState" value="YES" />
+  </component>
+  <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
+  <component name="ProjectInspectionProfilesVisibleTreeState">
+    <entry key="Project Default">
+      <profile-state>
+        <expanded-state>
+          <State>
+            <id>C/C++</id>
+          </State>
+          <State>
+            <id>Docker-compose</id>
+          </State>
+          <State>
+            <id>Dockerfile</id>
+          </State>
+          <State>
+            <id>GitLab CI/CD</id>
+          </State>
+          <State>
+            <id>HTTP 客户端</id>
+          </State>
+          <State>
+            <id>Ini 文件</id>
+          </State>
+          <State>
+            <id>JavaScript 和 TypeScript</id>
+          </State>
+          <State>
+            <id>LintRust</id>
+          </State>
+          <State>
+            <id>LintsRust</id>
+          </State>
+          <State>
+            <id>Python</id>
+          </State>
+          <State>
+            <id>Rust</id>
+          </State>
+          <State>
+            <id>代码中的冗余C/C++</id>
+          </State>
+          <State>
+            <id>命名约定LintsRust</id>
+          </State>
+          <State>
+            <id>常规JavaScript 和 TypeScript</id>
+          </State>
+          <State>
+            <id>数据流分析C/C++</id>
+          </State>
+          <State>
+            <id>正则表达式</id>
+          </State>
+          <State>
+            <id>潜在的代码质量问题C/C++</id>
+          </State>
+        </expanded-state>
+        <selected-state>
+          <State>
+            <id>用户定义</id>
+          </State>
+        </selected-state>
+      </profile-state>
+    </entry>
+  </component>
+</project>
