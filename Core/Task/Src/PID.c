@@ -77,8 +77,6 @@ float PID_Output(const float target, const double real)
 
     pid.error = pid.target - pid.real;
 
-    float i_out;
-
     float p_out = pid.Kp * pid.error;
 
     // 当设定温度突变时，先去除积分，防止积分累计过大导致超调
@@ -93,11 +91,9 @@ float PID_Output(const float target, const double real)
         {
             pid.integral = -pid.integralMax;
         }
-        i_out = pid.Ki * pid.integral;
-    } else
-    {
-        i_out = 0.0f;
     }
+
+    float i_out = pid.Ki * pid.integral;
 
     float d_out = pid.Kd * (pid.error - pid.last_error);
     pid.last_error = pid.error;
