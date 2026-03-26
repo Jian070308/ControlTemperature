@@ -14,13 +14,46 @@
 
 extern TIM_HandleTypeDef htim2;
 
+static float clampf(const float value, const float min_value, const float max_value)
+{
+    if (value > max_value)
+    {
+        return max_value;
+    }
+    if (value < min_value)
+    {
+        return min_value;
+    }
+    return value;
+}
+
+static float get_output_limit(const float abs_error)
+{
+    if (abs_error <= pid.deadBand)
+    {
+        return 0.0f;
+    }
+
+    if (abs_error <= pid.smallErrorBand)
+    {
+        return pid.smallOutputMax;
+    }
+
+    if (abs_error <= pid.mediumErrorBand)
+    {
+        return pid.mediumOutputMax;
+    }
+
+    return pid.outputMax;
+}
+
 void ReadData()
 {
-   MAX31855_ReadData(&MAX31855_Handle);
-   if(!MAX31855_GetFault(&MAX31855_Handle))
-   {
-       realTemp = MAX31855_GetTemperature(&MAX31855_Handle);
-   }
+    MAX31855_ReadData(&MAX31855_Handle);
+    if (!MAX31855_GetFault(&MAX31855_Handle))
+    {
+        realTemp = MAX31855_GetTemperature(&MAX31855_Handle);
+    }
 }
 
 void SetPwm(int16_t power)
@@ -30,14 +63,11 @@ void SetPwm(int16_t power)
 
     if (power > 0)
     {
-        // 加热
-        // 把另一端置 0，防止 H 桥上下桥臂直通短路烧毁
         __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
         __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, power);
     }
     else if (power < 0)
     {
-        // 制冷
         __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
         __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, -power);
     }
@@ -57,62 +87,85 @@ void PID_Init()
     pid.outputMax = output_Max;
     pid.integralMax = i_Max;
     pid.integralAdd = i_Add;
+    pid.sampleTime = PID_SAMPLE_TIME_S;
+    pid.dFilterAlpha = PID_D_FILTER_ALPHA;
+    pid.deadBand = PID_DEADBAND;
+    pid.smallErrorBand = PID_SMALL_ERROR_BAND;
+    pid.mediumErrorBand = PID_MEDIUM_ERROR_BAND;
+    pid.smallOutputMax = PID_SMALL_OUTPUT_MAX;
+    pid.mediumOutputMax = PID_MEDIUM_OUTPUT_MAX;
 
     PID_Reset();
 }
 
-// 当设定温度突变时，调用一次，清除误差
 void PID_Reset()
 {
+    pid.target = 0.0f;
+    pid.real = 0.0f;
     pid.error = 0.0f;
     pid.last_error = 0.0f;
+    pid.last_real = 0.0f;
     pid.integral = 0.0f;
+    pid.derivative = 0.0f;
 }
 
 float PID_Output(const float target, const double real)
 {
-    pid.target = target;
-    pid.real = real;
+    const float real_value = (float)real;
+    const float output_max = (pid.outputMax > 0.0f) ? pid.outputMax : output_Max;
 
+    pid.target = target;
+    pid.real = real_value;
     pid.error = pid.target - pid.real;
 
-    float p_out = pid.Kp * pid.error;
+    const float abs_error = fabsf(pid.error);
+    const float dynamic_output_limit = get_output_limit(abs_error);
+    if (dynamic_output_limit <= 0.0f)
+    {
+        pid.integral = 0.0f;
+        pid.derivative = 0.0f;
+        pid.last_error = pid.error;
+        pid.last_real = pid.real;
+        return 0.0f;
+    }
 
-    // 当设定温度突变时，先去除积分，防止积分累计过大导致超调
+    const float p_out = pid.Kp * pid.error;
+
+    const float sample_time = (pid.sampleTime > 0.0f) ? pid.sampleTime : PID_SAMPLE_TIME_S;
+    const float measurement_rate = (pid.real - pid.last_real) / sample_time;
+    pid.derivative = pid.dFilterAlpha * pid.derivative + (1.0f - pid.dFilterAlpha) * measurement_rate;
+    const float d_out = -pid.Kd * pid.derivative;
+
+    const float total_without_i = p_out + d_out;
+    float next_integral = pid.integral;
     if (fabsf(pid.error) <= pid.integralAdd)
     {
-        pid.integral += pid.error;
+        const float candidate_integral = clampf(pid.integral + pid.error, -pid.integralMax, pid.integralMax);
+        const float candidate_i_out = pid.Ki * candidate_integral;
+        const float candidate_total = total_without_i + candidate_i_out;
+        const uint8_t saturating_high = candidate_total > dynamic_output_limit;
+        const uint8_t saturating_low = candidate_total < -dynamic_output_limit;
 
-        if (pid.integral > pid.integralMax)
+        if ((!saturating_high || pid.error < 0.0f) && (!saturating_low || pid.error > 0.0f))
         {
-            pid.integral = pid.integralMax;
-        } else if (pid.integral < -pid.integralMax)
-        {
-            pid.integral = -pid.integralMax;
+            next_integral = candidate_integral;
         }
     }
+    pid.integral = next_integral;
 
-    float i_out = pid.Ki * pid.integral;
+    const float i_out = pid.Ki * pid.integral;
+    float total_out = total_without_i + i_out;
+    total_out = clampf(total_out, -dynamic_output_limit, dynamic_output_limit);
+    total_out = clampf(total_out, -output_max, output_max);
 
-    float d_out = pid.Kd * (pid.error - pid.last_error);
     pid.last_error = pid.error;
-
-    float total_out = p_out + i_out + d_out;
-
-    if (total_out > pid.outputMax)
-    {
-        total_out = pid.outputMax;
-    } else if (total_out < -pid.outputMax)
-    {
-        total_out = -pid.outputMax;
-    }
+    pid.last_real = pid.real;
 
     return total_out;
 }
 
 void StartPIDTask(void *argument)
 {
-    // 等待传感器硬件上电完毕
     vTaskDelay(pdMS_TO_TICKS(300));
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -124,3 +177,5 @@ void StartPIDTask(void *argument)
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
     }
 }
+
+
