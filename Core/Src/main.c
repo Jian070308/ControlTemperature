@@ -76,6 +76,8 @@ void Project_Init()
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
 
+  USART2_StartReceiveIT();
+
   PID_Init();
 }
 /* USER CODE END 0 */

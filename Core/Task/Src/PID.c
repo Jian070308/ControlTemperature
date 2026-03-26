@@ -195,6 +195,7 @@ void StartPIDTask(void *argument)
 {
     vTaskDelay(pdMS_TO_TICKS(300));
     PID_Debug_Init();
+    USART2_StartReceiveIT();
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
     for (;;)
