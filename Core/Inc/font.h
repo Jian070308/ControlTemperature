@@ -30,6 +30,7 @@ extern const Font font16x16;
 
 extern const Font font14x14;
 
+extern const Font font13x13;
 /**
  * @brief 图片结构体
  * @note  图片数据可以使用波特律动LED取模助手生成(https://led.baud-dance.com)
@@ -43,6 +44,7 @@ typedef struct Image {
 extern const Image bilibiliImg;
 
 extern const Image ImageImg;
+
 
 
 

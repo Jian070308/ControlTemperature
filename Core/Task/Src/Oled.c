@@ -7,14 +7,17 @@ uint8_t show_target = 40;
 
 void StartOledTask(void *argument)
 {
+
     for (;;)
     {
         OLED_NewFrame();
-        printf(message, "Real temperature: %.2fC", realTemp);
-        OLED_PrintString(1, 1, message, &font16x16, OLED_COLOR_NORMAL);
-        printf(message, "Target temperature: %dC", show_target);
-        OLED_PrintString(1, 20, message, &font16x16, OLED_COLOR_NORMAL);
+        sprintf(message, "Real:%.2fC", realTemp);
+        OLED_PrintString(1, 1, message, &font13x13, OLED_COLOR_NORMAL);
+        sprintf(message, "Target:%dC", show_target);
+        OLED_PrintString(1, 20, message, &font13x13, OLED_COLOR_NORMAL);
+        sprintf(message, "Target:%dC", targetTemp);
+        OLED_PrintString(1, 40, message, &font13x13, OLED_COLOR_NORMAL);
         OLED_ShowFrame();
-        osDelay(200);
+        osDelay(10);
     }
 }

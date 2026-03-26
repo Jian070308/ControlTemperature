@@ -62,13 +62,15 @@ extern PID_TypeDef pid;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LED_Pin GPIO_PIN_13
+#define LED_GPIO_Port GPIOC
 #define Hot_Pin GPIO_PIN_0
 #define Hot_GPIO_Port GPIOA
 #define Cold_Pin GPIO_PIN_1
 #define Cold_GPIO_Port GPIOA
 #define SPI1_NSS_Pin GPIO_PIN_4
 #define SPI1_NSS_GPIO_Port GPIOA
-#define Key_Pin GPIO_PIN_15
+#define Key_Pin GPIO_PIN_11
 #define Key_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */

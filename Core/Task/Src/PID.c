@@ -9,7 +9,6 @@
 #include "projdefs.h"
 #include "task.h"
 
-
 #define MAX 1000
 #define MIN (-1000)
 

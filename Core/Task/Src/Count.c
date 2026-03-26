@@ -20,7 +20,6 @@ void StartCountTask(void *argument)
         const int16_t current_counter = (int16_t)__HAL_TIM_GET_COUNTER(&htim1);
         const int16_t diff = current_counter - last_counter;
 
-
         if (diff >= 4)
         {
             target += 2;
@@ -56,6 +55,7 @@ void StartCountTask(void *argument)
         {
             flag = 0;
         }
+
 
         osDelay(10);
     }

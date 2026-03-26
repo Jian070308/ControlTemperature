@@ -65,7 +65,7 @@ osThreadId_t CountTaskHandle;
 const osThreadAttr_t CountTask_attributes = {
   .name = "CountTask",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityHigh7,
 };
 
 /* Private function prototypes -----------------------------------------------*/
