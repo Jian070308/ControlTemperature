@@ -75,3 +75,13 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 
     # Add user defined libraries
 )
+
+# Add linked libraries
+target_link_libraries(${CMAKE_PROJECT_NAME}
+        stm32cubemx
+
+        # Add user defined libraries
+)
+
+# 【新增】开启 printf/sprintf 的浮点数 (%f) 打印支持
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -u _printf_float)

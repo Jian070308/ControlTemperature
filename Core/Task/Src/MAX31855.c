@@ -148,13 +148,19 @@ float MAX31855_GeInternalTemperatureInFahrenheit(MAX31855_StateHandle *MAX31855)
 
 void MAX31855_ReadData(MAX31855_StateHandle *MAX31855)
 {
-	uint8_t payload[4];
+	uint8_t payload[4] = {0};
 	uint32_t frame; // 使用无符号 32 位整型拼接，避免符号位干扰
 
 	// 1. 通过 SPI 读取 4 个字节的数据
 	MAX31855_SetNSSState(MAX31855, GPIO_PIN_RESET);
-	HAL_SPI_Receive(MAX31855->hspi, payload, 4, 20);
+	HAL_StatusTypeDef status = HAL_SPI_Receive(MAX31855->hspi, payload, 4, 20);
 	MAX31855_SetNSSState(MAX31855, GPIO_PIN_SET);
+
+	if (status != HAL_OK)
+	{
+		MAX31855->fault = 1;
+		return;
+	}
 
 	// 2. 将 4 个字节拼接成一个 32 位的原始数据帧
 	frame = ((uint32_t)payload[0] << 24) |

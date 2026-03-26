@@ -112,6 +112,9 @@ float PID_Output(const float target, const double real)
 
 void StartPIDTask(void *argument)
 {
+    // 等待传感器硬件上电完毕
+    vTaskDelay(pdMS_TO_TICKS(300));
+
     TickType_t xLastWakeTime = xTaskGetTickCount();
     for (;;)
     {
