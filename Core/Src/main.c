@@ -22,6 +22,7 @@
 #include "i2c.h"
 #include "spi.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -46,7 +47,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile uint8_t targetTemp = 40;
+volatile float targetTemp = 40.0f;
 volatile double realTemp = 0.00;
 PID_TypeDef pid;
 /* USER CODE END PV */
@@ -112,6 +113,7 @@ int main(void)
   MX_TIM1_Init();
   MX_SPI1_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   Project_Init();
   /* USER CODE END 2 */

@@ -40,11 +40,15 @@ typedef struct
     float mediumErrorBand;
     float smallOutputMax;
     float mediumOutputMax;
+    float output;
 } PID_TypeDef;
 
 void PID_Init();
 
 float PID_Output(float target, double real);
+
+void PID_SetTunings(float kp, float ki, float kd);
+void PID_GetTunings(float *kp, float *ki, float *kd);
 
 void PID_Reset();
 

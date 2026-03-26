@@ -1,7 +1,10 @@
 #include "cmsis_os2.h"
 #include "../Inc/MAX31855.h"
+#include "PIDDebug.h"
 #include "PID.h"
+#include "usart.h"
 #include <math.h>
+#include <stddef.h>
 
 #include <FreeRTOS.h>
 #include "FreeRTOSConfig.h"
@@ -80,9 +83,7 @@ void SetPwm(int16_t power)
 
 void PID_Init()
 {
-    pid.Kp = P;
-    pid.Ki = I;
-    pid.Kd = D;
+    PID_SetTunings(P, I, D);
 
     pid.outputMax = output_Max;
     pid.integralMax = i_Max;
@@ -107,6 +108,7 @@ void PID_Reset()
     pid.last_real = 0.0f;
     pid.integral = 0.0f;
     pid.derivative = 0.0f;
+    pid.output = 0.0f;
 }
 
 float PID_Output(const float target, const double real)
@@ -126,6 +128,7 @@ float PID_Output(const float target, const double real)
         pid.derivative = 0.0f;
         pid.last_error = pid.error;
         pid.last_real = pid.real;
+        pid.output = 0.0f;
         return 0.0f;
     }
 
@@ -160,13 +163,39 @@ float PID_Output(const float target, const double real)
 
     pid.last_error = pid.error;
     pid.last_real = pid.real;
+    pid.output = total_out;
 
     return total_out;
+}
+
+void PID_SetTunings(const float kp, const float ki, const float kd)
+{
+    pid.Kp = kp;
+    pid.Ki = ki;
+    pid.Kd = kd;
+}
+
+void PID_GetTunings(float *kp, float *ki, float *kd)
+{
+    if (kp != NULL)
+    {
+        *kp = pid.Kp;
+    }
+    if (ki != NULL)
+    {
+        *ki = pid.Ki;
+    }
+    if (kd != NULL)
+    {
+        *kd = pid.Kd;
+    }
 }
 
 void StartPIDTask(void *argument)
 {
     vTaskDelay(pdMS_TO_TICKS(300));
+    PID_Debug_Init();
+    USART2_StartReceiveIT();
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
     for (;;)
@@ -174,8 +203,7 @@ void StartPIDTask(void *argument)
         ReadData();
         const float pwm_cmd = PID_Output((float)targetTemp, realTemp);
         SetPwm((int16_t)pwm_cmd);
+        PID_Debug_Process();
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
     }
 }
-
-

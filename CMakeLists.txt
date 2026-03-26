@@ -50,6 +50,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         Core/Src/font.c
         Core/Task/Src/MAX31855.c
         Core/Task/Src/PID.c
+        Core/Task/Src/PIDDebug.c
         Core/Task/Src/Oled.c
         Core/Task/Src/Count.c
 

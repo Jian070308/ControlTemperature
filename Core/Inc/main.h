@@ -34,6 +34,7 @@ extern "C" {
 #include "oled.h"
 #include "../Task/Inc/MAX31855.h"
 #include "spi.h"
+#include "usart.h"
 #include "PID.h"
 /* USER CODE END Includes */
 
@@ -56,7 +57,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-extern volatile uint8_t targetTemp;
+extern volatile float targetTemp;
 extern volatile double realTemp;
 extern PID_TypeDef pid;
 /* USER CODE END EFP */

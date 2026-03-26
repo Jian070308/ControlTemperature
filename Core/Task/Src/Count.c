@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 
 #include "cmsis_os2.h"
@@ -12,8 +13,8 @@ void StartCountTask(void *argument)
     static int16_t last_counter = 0;
     static uint8_t flag = 0;
 
-    uint8_t target = targetTemp;
-    uint8_t last_target = targetTemp;
+    uint8_t target = (uint8_t)targetTemp;
+    float last_target = targetTemp;
 
     for (;;)
     {
@@ -31,31 +32,29 @@ void StartCountTask(void *argument)
             last_counter = current_counter;
         }
 
-        // 限幅
         target = target > 70 ? 70 : (target < 40 ? 40 : target);
 
         show_target = target;
 
-        if (HAL_GPIO_ReadPin(Key_GPIO_Port,Key_Pin) == GPIO_PIN_RESET && flag == 0)
+        if (HAL_GPIO_ReadPin(Key_GPIO_Port, Key_Pin) == GPIO_PIN_RESET && flag == 0)
         {
             osDelay(20);
-            if (HAL_GPIO_ReadPin(Key_GPIO_Port,Key_Pin) == GPIO_PIN_RESET)
+            if (HAL_GPIO_ReadPin(Key_GPIO_Port, Key_Pin) == GPIO_PIN_RESET)
             {
                 flag = 1;
                 last_target = targetTemp;
-                targetTemp = target;                // 确认设定目标温度
+                targetTemp = (float)target;
 
-                if (abs(targetTemp - last_target) > 10)
+                if (fabsf(targetTemp - last_target) > 10.0f)
                 {
-                    PID_Reset();                       // 突变时重置 PID，清除误差
+                    PID_Reset();
                 }
             }
         }
-        else if (HAL_GPIO_ReadPin(Key_GPIO_Port,Key_Pin) == GPIO_PIN_SET)
+        else if (HAL_GPIO_ReadPin(Key_GPIO_Port, Key_Pin) == GPIO_PIN_SET)
         {
             flag = 0;
         }
-
 
         osDelay(10);
     }
