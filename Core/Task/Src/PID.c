@@ -11,8 +11,17 @@
 
 #define MAX 1000
 #define MIN (-1000)
+#define TEMP_MEDIAN_WINDOW 3U
+#define TEMP_MAX_STEP_C 3.0f
+#define TEMP_FILTER_ALPHA 0.20f
 
 extern TIM_HandleTypeDef htim2;
+
+static float temp_samples[TEMP_MEDIAN_WINDOW] = {0.0f};
+static uint8_t temp_sample_count = 0U;
+static uint8_t temp_sample_index = 0U;
+static uint8_t temp_filter_ready = 0U;
+static float filtered_temp = 0.0f;
 
 static float clampf(const float value, const float min_value, const float max_value)
 {
@@ -25,6 +34,71 @@ static float clampf(const float value, const float min_value, const float max_va
         return min_value;
     }
     return value;
+}
+
+static void sort3(float *a, float *b, float *c)
+{
+    float temp = 0.0f;
+
+    if (*a > *b)
+    {
+        temp = *a;
+        *a = *b;
+        *b = temp;
+    }
+    if (*b > *c)
+    {
+        temp = *b;
+        *b = *c;
+        *c = temp;
+    }
+    if (*a > *b)
+    {
+        temp = *a;
+        *a = *b;
+        *b = temp;
+    }
+}
+
+static float filter_temperature_sample(const float sample)
+{
+    temp_samples[temp_sample_index] = sample;
+    temp_sample_index = (uint8_t)((temp_sample_index + 1U) % TEMP_MEDIAN_WINDOW);
+    if (temp_sample_count < TEMP_MEDIAN_WINDOW)
+    {
+        temp_sample_count++;
+    }
+
+    if (temp_sample_count < TEMP_MEDIAN_WINDOW)
+    {
+        filtered_temp = sample;
+        return filtered_temp;
+    }
+
+    {
+        float a = temp_samples[0];
+        float b = temp_samples[1];
+        float c = temp_samples[2];
+        float median = 0.0f;
+
+        sort3(&a, &b, &c);
+        median = b;
+
+        if (temp_filter_ready == 0U)
+        {
+            filtered_temp = median;
+            temp_filter_ready = 1U;
+            return filtered_temp;
+        }
+
+        if (fabsf(median - filtered_temp) > TEMP_MAX_STEP_C)
+        {
+            return filtered_temp;
+        }
+
+        filtered_temp += TEMP_FILTER_ALPHA * (median - filtered_temp);
+        return filtered_temp;
+    }
 }
 
 static float get_output_limit(const float abs_error)
@@ -47,7 +121,12 @@ void ReadData()
     MAX31855_ReadData(&MAX31855_Handle);
     if (!MAX31855_GetFault(&MAX31855_Handle))
     {
-        realTemp = MAX31855_GetTemperature(&MAX31855_Handle);
+        const float sample = MAX31855_GetTemperature(&MAX31855_Handle);
+
+        if ((sample > -100.0f) && (sample < 400.0f))
+        {
+            realTemp = filter_temperature_sample(sample);
+        }
     }
 }
 
@@ -102,6 +181,10 @@ void PID_Reset()
     pid.last_real = 0.0f;
     pid.integral = 0.0f;
     pid.derivative = 0.0f;
+    temp_sample_count = 0U;
+    temp_sample_index = 0U;
+    temp_filter_ready = 0U;
+    filtered_temp = (float)realTemp;
 }
 
 float PID_Output(const float target, const double real)
