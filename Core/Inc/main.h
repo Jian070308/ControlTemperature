@@ -64,6 +64,8 @@ extern PID_TypeDef pid;
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
+#define Enable_Pin GPIO_PIN_15
+#define Enable_GPIO_Port GPIOC
 #define Hot_Pin GPIO_PIN_0
 #define Hot_GPIO_Port GPIOA
 #define Cold_Pin GPIO_PIN_1

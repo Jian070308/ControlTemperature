@@ -22,6 +22,7 @@
 #include "i2c.h"
 #include "spi.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -76,6 +77,7 @@ void Project_Init()
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
 
   PID_Init();
+  HAL_Delay(500);                   // 等待温度均匀
 }
 /* USER CODE END 0 */
 
@@ -112,6 +114,7 @@ int main(void)
   MX_TIM1_Init();
   MX_SPI1_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   Project_Init();
   /* USER CODE END 2 */

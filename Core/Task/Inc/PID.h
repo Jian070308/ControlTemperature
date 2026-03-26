@@ -1,13 +1,13 @@
 #ifndef CONTROLTEMPERATURE_PID_H
 #define CONTROLTEMPERATURE_PID_H
 
-#define P 0
+#define P 60
 #define I 0
 #define D 0
 #define i_Max 400.0f
 #define i_Add 3.0f
 #define output_Max 1000
-#define PID_SAMPLE_TIME_S 0.1f
+#define PID_SAMPLE_TIME_S 0.25f
 #define PID_D_FILTER_ALPHA 0.85f
 #define PID_DEADBAND 0.20f
 #define PID_SMALL_ERROR_BAND 0.80f

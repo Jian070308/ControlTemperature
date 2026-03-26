@@ -29,11 +29,6 @@ static float clampf(const float value, const float min_value, const float max_va
 
 static float get_output_limit(const float abs_error)
 {
-    if (abs_error <= pid.deadBand)
-    {
-        return 0.0f;
-    }
-
     if (abs_error <= pid.smallErrorBand)
     {
         return pid.smallOutputMax;
@@ -113,6 +108,7 @@ float PID_Output(const float target, const double real)
 {
     const float real_value = (float)real;
     const float output_max = (pid.outputMax > 0.0f) ? pid.outputMax : output_Max;
+    const float sample_time = (pid.sampleTime > 0.0f) ? pid.sampleTime : PID_SAMPLE_TIME_S;
 
     pid.target = target;
     pid.real = real_value;
@@ -120,33 +116,35 @@ float PID_Output(const float target, const double real)
 
     const float abs_error = fabsf(pid.error);
     const float dynamic_output_limit = get_output_limit(abs_error);
-    if (dynamic_output_limit <= 0.0f)
+
+    float working_error = pid.error;
+    if (abs_error <= pid.deadBand)
     {
-        pid.integral = 0.0f;
-        pid.derivative = 0.0f;
-        pid.last_error = pid.error;
-        pid.last_real = pid.real;
-        return 0.0f;
+        working_error = 0.0f;
     }
+    const float p_out = pid.Kp * working_error;
 
-    const float p_out = pid.Kp * pid.error;
-
-    const float sample_time = (pid.sampleTime > 0.0f) ? pid.sampleTime : PID_SAMPLE_TIME_S;
+    // 微分先行逻辑保持不变，但只有在获取到真实变化时才有意义（通过延长 Task 周期解决）
     const float measurement_rate = (pid.real - pid.last_real) / sample_time;
     pid.derivative = pid.dFilterAlpha * pid.derivative + (1.0f - pid.dFilterAlpha) * measurement_rate;
     const float d_out = -pid.Kd * pid.derivative;
 
     const float total_without_i = p_out + d_out;
     float next_integral = pid.integral;
-    if (fabsf(pid.error) <= pid.integralAdd)
+
+    // 积分分离逻辑
+    if (fabsf(working_error) <= pid.integralAdd && fabsf(working_error) > 0.0f) // 【修改说明：在死区内(working_error == 0)不累加积分，防止死区内积分漂移】
     {
-        const float candidate_integral = clampf(pid.integral + pid.error, -pid.integralMax, pid.integralMax);
+        // 【修改说明：积分累加必须乘以 dt (sample_time)，使得 Ki 具备标准时间物理意义】
+        const float candidate_integral = clampf(pid.integral + (working_error * sample_time), -pid.integralMax, pid.integralMax);
         const float candidate_i_out = pid.Ki * candidate_integral;
         const float candidate_total = total_without_i + candidate_i_out;
+
+        // 积分抗饱和逻辑 (Anti-Windup)
         const uint8_t saturating_high = candidate_total > dynamic_output_limit;
         const uint8_t saturating_low = candidate_total < -dynamic_output_limit;
 
-        if ((!saturating_high || pid.error < 0.0f) && (!saturating_low || pid.error > 0.0f))
+        if ((!saturating_high || working_error < 0.0f) && (!saturating_low || working_error > 0.0f))
         {
             next_integral = candidate_integral;
         }
@@ -155,6 +153,7 @@ float PID_Output(const float target, const double real)
 
     const float i_out = pid.Ki * pid.integral;
     float total_out = total_without_i + i_out;
+
     total_out = clampf(total_out, -dynamic_output_limit, dynamic_output_limit);
     total_out = clampf(total_out, -output_max, output_max);
 
@@ -174,7 +173,7 @@ void StartPIDTask(void *argument)
         ReadData();
         const float pwm_cmd = PID_Output((float)targetTemp, realTemp);
         SetPwm((int16_t)pwm_cmd);
-        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(250));
     }
 }
 
