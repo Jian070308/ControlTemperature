@@ -46,6 +46,7 @@ static uint8_t rx_frame[PID_DEBUG_MAX_FRAME_LEN];
 static uint8_t rx_length = 0;
 static uint32_t last_wave_tick = 0;
 static uint8_t ctrl_code = 0;
+static uint8_t protocol_online = 0;
 
 static uint16_t crc16_modbus(const uint8_t *data, uint16_t length)
 {
@@ -181,10 +182,18 @@ static void parse_frame(const uint8_t *frame, uint8_t length)
     switch (frame[1])
     {
         case TYPE_PID1:
+            protocol_online = 1U;
+            send_motor_code(MOTOR_CODE_TEMP_CONTROL);
+            send_motor_state(MOTOR_STATE_IDLE);
+            send_pid_init();
             handle_pid_frame(payload, payload_len);
             break;
 
         case TYPE_CTRL_CODE:
+            protocol_online = 1U;
+            send_motor_code(MOTOR_CODE_TEMP_CONTROL);
+            send_motor_state(MOTOR_STATE_IDLE);
+            send_pid_init();
             handle_ctrl_frame(payload, payload_len);
             break;
 
@@ -197,11 +206,8 @@ void PID_Debug_Init(void)
 {
     rx_length = 0;
     ctrl_code = 0;
+    protocol_online = 0;
     last_wave_tick = HAL_GetTick();
-
-    send_motor_code(MOTOR_CODE_TEMP_CONTROL);
-    send_motor_state(MOTOR_STATE_IDLE);
-    send_pid_init();
 }
 
 void PID_Debug_RxCpltCallback(const uint8_t byte)
@@ -234,7 +240,7 @@ void PID_Debug_RxCpltCallback(const uint8_t byte)
 
 void PID_Debug_Process(void)
 {
-    if ((HAL_GetTick() - last_wave_tick) >= 100U)
+    if ((protocol_online != 0U) && ((HAL_GetTick() - last_wave_tick) >= 100U))
     {
         last_wave_tick = HAL_GetTick();
         send_wave_frame();

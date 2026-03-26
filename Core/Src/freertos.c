@@ -50,21 +50,21 @@
 osThreadId_t OledTaskHandle;
 const osThreadAttr_t OledTask_attributes = {
   .name = "OledTask",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for PIDTask */
 osThreadId_t PIDTaskHandle;
 const osThreadAttr_t PIDTask_attributes = {
   .name = "PIDTask",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for CountTask */
 osThreadId_t CountTaskHandle;
 const osThreadAttr_t CountTask_attributes = {
   .name = "CountTask",
-  .stack_size = 128 * 4,
+  .stack_size = 192 * 4,
   .priority = (osPriority_t) osPriorityHigh7,
 };
 
