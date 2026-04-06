@@ -174,16 +174,38 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
   /* USER CODE END TIM2_MspInit 1 */
   }
 }
+// void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
+// {
+//
+//   GPIO_InitTypeDef GPIO_InitStruct = {0};
+//   if(timHandle->Instance==TIM2)
+//   {
+//   /* USER CODE BEGIN TIM2_MspPostInit 0 */
+//
+//   /* USER CODE END TIM2_MspPostInit 0 */
+//
+//     __HAL_RCC_GPIOA_CLK_ENABLE();
+//     /**TIM2 GPIO Configuration
+//     PA0-WKUP     ------> TIM2_CH1
+//     PA1     ------> TIM2_CH2
+//     */
+//     GPIO_InitStruct.Pin = Hot_Pin|Cold_Pin;
+//     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+//     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+//     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+//
+//   /* USER CODE BEGIN TIM2_MspPostInit 1 */
+//
+//   /* USER CODE END TIM2_MspPostInit 1 */
+//   }
+//
+// }
+
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
 {
-
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   if(timHandle->Instance==TIM2)
   {
-  /* USER CODE BEGIN TIM2_MspPostInit 0 */
-
-  /* USER CODE END TIM2_MspPostInit 0 */
-
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**TIM2 GPIO Configuration
     PA0-WKUP     ------> TIM2_CH1
@@ -191,14 +213,10 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
     */
     GPIO_InitStruct.Pin = Hot_Pin|Cold_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    // [着重修改] 将 GPIO 速度从 LOW 改为 HIGH，提升 PWM 高频方波边沿的翻转速率，防止波形畸变
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN TIM2_MspPostInit 1 */
-
-  /* USER CODE END TIM2_MspPostInit 1 */
   }
-
 }
 
 void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* tim_encoderHandle)

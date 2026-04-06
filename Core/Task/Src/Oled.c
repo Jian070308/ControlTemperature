@@ -19,5 +19,6 @@ void StartOledTask(void *argument)
         OLED_PrintString(1, 40, message, &font13x13, OLED_COLOR_NORMAL);
         OLED_ShowFrame();
         osDelay(10);
+
     }
 }

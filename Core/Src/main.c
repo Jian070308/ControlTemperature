@@ -18,10 +18,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
+#include <stdio.h>
+
 #include "cmsis_os.h"
 #include "i2c.h"
 #include "spi.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -55,11 +59,17 @@ PID_TypeDef pid;
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int _write(int file, char *ptr, int len) {
+  // HAL_MAX_DELAY 表示一直等待直到发送完成
+  HAL_UART_Transmit(&huart2, (uint8_t*)ptr, len, HAL_MAX_DELAY);
+  return len;
+}
+
+
 void Project_Init()
 {
   HAL_Delay(20);
@@ -77,6 +87,7 @@ void Project_Init()
 
   PID_Init();
   HAL_Delay(500);                   // 等待温度均匀
+
 }
 /* USER CODE END 0 */
 
@@ -88,7 +99,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  setvbuf(stdout, NULL, _IONBF, 0);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -113,6 +124,7 @@ int main(void)
   MX_TIM1_Init();
   MX_SPI1_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   Project_Init();
   /* USER CODE END 2 */

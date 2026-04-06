@@ -1,9 +1,9 @@
 #ifndef CONTROLTEMPERATURE_PID_H
 #define CONTROLTEMPERATURE_PID_H
 
-#define P 60
-#define I 0
-#define D 0
+#define P 150
+#define I 0.8
+#define D 20
 #define i_Max 400.0f
 #define i_Add 3.0f
 #define output_Max 1000

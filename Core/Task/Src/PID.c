@@ -4,6 +4,8 @@
 #include <math.h>
 
 #include <FreeRTOS.h>
+#include <stdio.h>
+
 #include "FreeRTOSConfig.h"
 #include "portmacro.h"
 #include "projdefs.h"
@@ -135,15 +137,15 @@ void SetPwm(int16_t power)
     if (power > MAX) power = MAX;
     if (power < MIN) power = MIN;
 
-    if (power > 0)
+    if (power < 0)
     {
         __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, power);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, -power);
     }
-    else if (power < 0)
+    else if (power > 0)
     {
         __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, -power);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, power);
     }
     else
     {
@@ -254,9 +256,11 @@ void StartPIDTask(void *argument)
     for (;;)
     {
         ReadData();
-        const float pwm_cmd = PID_Output((float)targetTemp, realTemp);
-        SetPwm((int16_t)pwm_cmd);
+        // const float pwm_cmd = PID_Output((float)targetTemp, realTemp);
+        // SetPwm((int16_t)pwm_cmd);
+        SetPwm(-900);
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(250));
+
     }
 }
 
